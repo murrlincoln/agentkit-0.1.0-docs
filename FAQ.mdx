@@ -1,0 +1,130 @@
+---
+title: "FAQ"
+sidebar_label: "FAQ"
+---
+
+Welcome to the Coinbase AgentKit FAQ section. Below are some of the most common questions developers have asked, along with detailed answers from our engineering team. This resource is designed to help you navigate and utilize AgentKit effectively in your projects.
+
+### **Table of Contents**
+
+1. Getting Started  
+2. Installation and Integration  
+3. Agent Architecture  
+4. Network and Trading Capabilities  
+5. Wallet Management  
+6. Agent Functionality  
+7. Support and Contributions
+
+## **Getting Started**
+
+### **Q: Is there a starter kit for those looking to build using AgentKit for the first time?**
+
+**A:** Yes\! Check out our [Quickstart Guide](/agentkit/docs/quickstart) and access the Replit link to get started in less than five minutes.
+
+### **Q: What's a good place to start for building agents?**
+
+**A:** A good starting point is to run the agent chatbot using our [repository supporting both Python and Node.js](https://github.com/coinbase/agentkit).
+
+
+## **Installation and Integration**
+
+### **Q: What is the correct installation path for `cdp-langchain`?**
+
+**A:** Use the following command to install the package:
+
+```
+npm install @coinbase/cdp-langchain
+```
+
+### **Q: How can I connect the Coinbase Wallet app to my agent?**
+
+**A:** There are a few options available:
+
+1. **Seed Phrase Export:** Export the seed phrase from your Coinbase Wallet App and initialize your AgentKit agent using the seed phrase.  
+2. **Fund Transfer:** Transfer funds from your Coinbase Wallet App to your agent's address.  
+3. **Future Integrations:** We are actively working on deeper integrations between the Coinbase Wallet App and Agents for more seamless connectivity.
+
+ 
+
+## **Agent Architecture**
+
+### **Q: Should I use one agent for all functions or multiple agents communicating with each other?**
+
+**A:** It is generally best to limit complexity where possible. Start with a single agent that supports all necessary actions. If the agent has difficulty distinguishing between actions or requires specialization for certain scenarios, you can expand your solution to include multiple agents, each focused on specific subsets of actions.
+
+ 
+
+## **Network and Trading Capabilities**
+
+### **Q: Unfortunately, I cannot trade ETH for USDC on the Base Sepolia network, as trading features are not supported on that network. Will we be able to trade with this AI agent? What is currently developed and available, and what is planned?**
+
+**A:** Currently, only Base Mainnet is supported for trading features. There are no immediate plans to support additional networks; however, we have other swap functionality features on our roadmap. Please let us know which networks you are most interested in.
+
+### **Q: Can the AI agent use other tokens to support gas fees when performing on-chain operations, such as cbBTC? It does not have USDC, ETH, or use other wallets to pay for gas.**
+
+**A:** USDC and cbBTC transactions are gasless for the agent on both Base Mainnet and Base Sepolia when using the CDP Wallet API. Other transactions currently require ETH for gas. You can use the faucet action to obtain Base Sepolia ETH or, if you are on Mainnet, have the agent provide its onchain address for you to send Mainnet ETH.
+
+ 
+
+## **Wallet Management**
+
+### **Q: I'm trying to change the network the agent runs on, but it's not working. What should I do?**
+
+**A:** If you are using the Replit template, you may notice that there is a file called "wallet_file.txt" that holds your agent's wallet information. If the program finds this file, it will default to giving the agent this wallet instead of creating a new one on a different network. To fix this issue, either rename the "wallet_data.txt" file or specify a different file in the program where the wallet info will be saved. 
+
+### **Q: If the agent has its own wallet, is it owned by an MPC, or is there just one wallet with the signing stored locally?**
+
+**A:** The agent has a one-to-one wallet setup (Externally Owned Account \[EOA\] with keys stored locally on the machine running the agent).
+
+### **Q: In production, how should the keys be stored? Should they be stored in the environment or in a Trusted Execution Environment (TEE)?**
+
+**A:** For production use cases, you can store the keys encrypted in a database, utilize a TEE, or use any other secure storage solution.
+
+### **Q: What's the limit to the number of addresses a wallet can generate?**
+
+**A:** Currently, the maximum number of addresses per wallet is 20 with the CDP Wallet API. Different wallet providers may have different limits, so please refer to the documentation for your specific wallet provider.
+
+### **Q: When I run the chatbot and ask it to create another address for my wallet, it says it can't. However, the Wallet documentation states that a wallet can have multiple addresses by calling `wallet.createAddress()`. Why can't the agent's wallet have multiple addresses?**
+
+**A:** The agent's wallet is capable of creating multiple addresses, but there is not currently an agent action to create new addresses. This functionality is on our roadmap. In the meantime, you can add a custom agent action by following our [Add Custom Functionality Guide](/agentkit/docs/add-agent-capabilities) and call `wallet.create_address(...)` within this action to enable your agent to create multiple addresses.
+
+ 
+
+## **Agent Functionality**
+
+### **Q: How can I get real-time internet access for my agent?**
+
+**A:** For real-time internet access, we recommend using the [WebBrowser Tool](https://js.langchain.com/docs/integrations/tools/webbrowser/). You can add this tool to the list of tools when instantiating your agent.
+
+### **Q: What chains does AgentKit support?**
+
+**A:** AgentKit supports whatever networks your wallet provider supports, which will generally be most EVM-based chains. The CDP Wallet API supports the following networks:
+
+* Base  
+* Ethereum  
+* Arbitrum  
+* Polygon
+
+### **Q: What wallets does AgentKit work with?**
+
+**A:** AgentKit works with any wallet that can connect via the [EIP-1193 standard](https://eips.ethereum.org/EIPS/eip-1193). By default, AgentKit uses the CDP Wallet API.
+
+### **Q: When referring to the "interval=10" in autonomous mode, is it 10 seconds or another unit of measurement?**
+
+**A:** The "interval=10" refers to 10 seconds, which is the default interval between autonomous inferences. The agent will continue to run autonomously as long as the process is active.
+
+ 
+
+## **Support and Contributions**
+
+### **Q: I've found a bug in the AgentKit repository or have a feature request. How can I report this to the team?**
+
+**A:** Please open a bug report or feature request on our [AgentKit GitHub Repository](https://github.com/coinbase/agentkit/issues).
+
+ 
+
+We hope this FAQ section helps you effectively utilize Coinbase AgentKit in your development projects.
+
+If you have any additional questions or need further assistance, feel free to reach out through our [Coinbase Developer Platform Discord](https://discord.com/invite/cdp/).
+
+ 

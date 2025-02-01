@@ -1,0 +1,50 @@
+---
+title: "Agent Actions"
+sidebar_label: "Agent Actions"
+---
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+You can find all of the actions supported by AgentKit at the following links:
+- [Python version](https://github.com/coinbase/agentkit/tree/master/cdp-agentkit-core/python/cdp_agentkit_core/actions)
+- [Node.js version](https://github.com/coinbase/agentkit/tree/master/cdp-agentkit-core/typescript/cdp_agentkit_core/actions)
+
+Generally, Node.js supports more crypto-specific actions than the Python version.
+
+By default, AgentKit supports the following actions in the 'wallet' action provider:
+- `get_wallet_details` - Get details about the Wallet, like the address
+- `transfer` - Transfer assets between addresses
+- `get_native_balance` - Get the balance of a chain's native asset (e.g. ETH on Ethereum and Base)
+- `sign_message` - Sign a message
+
+### Adding Action Provider Groupings
+You can add additional actions or action providers upon agent instantiation. Here are the Python(coming soon) and [Node.js](https://github.com/coinbase/agentkit/tree/master/cdp-agentkit-core/typescript/src/action-providers) available action providers:
+<Tabs>
+<TabItem value="Node.js">
+```javascript
+    const erc721 = erc721ActionProvider();
+    const pyth = pythActionProvider();
+    const wallet = walletActionProvider(); // default action package: get native balance, transfer, sign message, get wallet details
+    const cdp = cdpApiActionProvider({ // for providers that require API keys include them in their instantiation
+      apiKeyName: process.env.CDP_API_KEY_NAME,
+      apiKeyPrivateKey: process.env.CDP_API_KEY_PRIVATE_KEY?.replace(/\\n/g, "\n"),
+    });
+
+    const agentKit = await AgentKit.from({
+      walletProvider,
+      actionProviders: [erc721, pyth, wallet, cdp],
+    });
+```
+</TabItem>
+<TabItem value="Python">
+```python
+coming soon
+```
+</TabItem>
+</Tabs>
+
+
+Any action not currently supported by AgentKit can be added to individual agents by following the guide for [adding agent capabilities](/agentkit/docs/add-agent-capabilities).
+For actions to be made available for any agent, we welcome open-source contributions to AgentKit for adding more actions! Please see our [contribution guide](https://github.com/coinbase/agentkit/blob/master/.github/CONTRIBUTING.md) for more information.
+

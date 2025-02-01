@@ -1,0 +1,182 @@
+---
+title: Add Agent Capabilities
+sidebar_label: Add Agent Capabilities
+slug: add-agent-capabilities
+---
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+import CodeBlock from '@theme/CodeBlock';
+import { AgentKitAddCapabilitiesDemoApp } from "@site/src/constants/demoApps";
+import VideoPlayer from "@components/VideoPlayer";
+import { Box } from "@cbhq/cds-web/layout";
+
+We highly encourage extending the agent's functionality through new onchain interactions and APIs, or by introducing new Langchain tools.
+
+Any function that can be written in Python or TypeScript can be made a command for an agent.
+
+## Add existing Langchain tools
+You can easily extend your agent's capabilities by incorporating additional Langchain tools. See [Integrating LangChain Tools](./integrate-langchain-tools.mdx).
+
+## Add Custom functionality (using AI or manually)
+To make the process as simple as possible, AgentKit supports adding custom functionality in multiple ways. Below are examples of how to add message signing functionality:
+
+<Tabs groupId="programming-language">
+<TabItem value="Typescript" label="Typescript" default>
+
+### Adding Actions to your Action Provider
+
+#### Simple Option within your chatbot.ts file
+For quick testing or actions you don't plan to contribute to the repo, you can use the `customActionProvider` helper.
+```typescript
+const customSignMessage = customActionProvider<EvmWalletProvider>({ // wallet types specify which providers can use this action. It can be as generic as WalletProvider or as specific as CdpWalletProvider
+  name: "sign_message",
+  description: "Sign arbitrary messages using EIP-191 Signed Message Standard hashing",
+  schema: z.object({
+    message: z.string().describe("The message to sign"),
+  }),
+  invoke: async (walletProvider, args: any) => {
+    const { message } = args;
+    const signature = await walletProvider.signMessage(message);
+    return `The payload signature ${signature}`;
+  },
+});
+
+const agentKit = await AgentKit.from({
+  walletProvider,
+  actionProviders: [customSignMessage],
+});
+```
+
+#### Adding Actions for contribution
+
+Actions are defined as instance methods on the action provider class with the `@CreateAction` decorator. Actions can use a wallet provider or not and always return a Promise that resolves to a string.
+
+See the [contribution guide](https://github.com/coinbase/agentkit/blob/master/CONTRIBUTING.md) for more details.
+
+**Hint:** Use LLMs to generate the schema and action provider, so all you need to define is the function.
+
+1. Define the action schema. Action schemas are defined using the `zod` library.
+
+```typescript
+import { z } from "zod";
+
+export const SignMessageSchema = z.object({
+  message: z.string().describe("The message to sign. e.g. `hello world`"),
+});
+```
+
+2. Define the action provider.
+
+```typescript
+import { ActionProvider, WalletProvider, Network, CreateAction } from "@coinbase/agentkit";
+
+class MyActionProvider extends ActionProvider<WalletProvider> {
+    constructor() {
+        super("my-action-provider", []);
+    }
+
+    @CreateAction({
+        name: "my-action",
+        description: "My action description",
+        schema: MyActionSchema,
+    })
+    async myAction(args: z.infer<typeof MyActionSchema>): Promise<string> {
+        return args.myField;
+    }
+
+    supportsNetwork = (network: Network) => true;
+}
+
+export const myActionProvider = () => new MyActionProvider();
+```
+
+3. Add the action provider to your AgentKit instance:
+
+```typescript
+const agentKit = new AgentKit({
+  cdpApiKeyName: "CDP API KEY NAME",
+  cdpApiKeyPrivate: "CDP API KEY PRIVATE KEY",
+  actionProviders: [myActionProvider()],
+});
+```
+
+</TabItem>
+<TabItem value="Python" label="Python (legacy)">
+
+```python
+from cdp import Wallet, hash_message
+from cdp_langchain.tools import CdpTool
+from pydantic import BaseModel, Field
+
+# Define a custom action example.
+
+SIGN_MESSAGE_PROMPT = """
+This tool will sign arbitrary messages using EIP-191 Signed Message Standard hashing.
+"""
+
+class SignMessageInput(BaseModel):
+    """Input argument schema for sign message action."""
+
+    message: str = Field(
+        ...,
+        description="The message to sign. e.g. `hello world`"
+    )
+
+def sign_message(wallet: Wallet, message: str) -> str:
+    """Sign message using EIP-191 message hash from the wallet.
+
+    Args:
+        wallet (Wallet): The wallet to sign the message from.
+        message (str): The message to hash and sign.
+
+    Returns:
+        str: The message and corresponding signature.
+
+    """
+    payload_signature = wallet.sign_payload(hash_message(message)).wait()
+
+    return f"The payload signature {payload_signature}"
+
+
+
+def initialize_agent():
+    """Initialize the agent with CDP Agentkit."""
+    # TODO: Load the LLM model and CDP AgentKit values from the environment.
+
+    agentkit = CdpAgentkitWrapper(**values)
+
+    # Initialize CDP AgentKit Toolkit and get tools.
+    cdp_toolkit = CdpToolkit.from_cdp_agentkit_wrapper(agentkit)
+    tools = cdp_toolkit.get_tools()
+
+    # Define a new tool for signing messages.
+    signMessageTool = CdpTool(
+        name="sign_message",
+        description=SIGN_MESSAGE_PROMPT,
+        cdp_agentkit_wrapper=agentkit,
+        args_schema=SignMessageInput,
+        func=sign_message,
+    )
+
+    all_tools = tools.append(signMessageTool)
+
+    # Store buffered conversation history in memory.
+    memory = MemorySaver()
+    config = {"configurable": {"thread_id": "CDP AgentKit Chatbot Example!"}}
+
+    # Create ReAct Agent using the LLM and CDP AgentKit tools.
+    return create_react_agent(
+        llm,
+        tools=all_tools,
+        checkpointer=memory,
+        state_modifier="You are a helpful agent that can interact onchain on the Base Layer 2 using the Coinbase Developer Platform AgentKit. You are empowered to interact onchain using your tools. If you ever need funds, you can request them from the faucet. You can also deploy your own ERC-20 tokens, NFTs, and interact with them. You also have the ability to sign messages using your wallet.",
+    ), config
+```
+
+</TabItem>
+</Tabs>
+
+## Contribute to the toolkit
+
+If you go through the additional effort to formally add CDP SDK functionality in a way that's compatible with the package, please submit a PR so we can consider including it in future releases!

@@ -1,0 +1,94 @@
+---
+title: "Wallet Management"
+sidebar_label: "Wallet Management"
+---
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+AgentKit supports multiple wallet providers, with the [CDP Wallet API](/wallet-api/docs/welcome) being the default implementation. It supports the following operations, alongside comptability with the full suite of CDP products including Onramp, onchain reputation score, and Commerce:
+- [Creating API Wallets](/wallet-api/docs/wallets)
+- [Signing transactions](/wallet-api/docs/message-signing)
+- [Deploying and interacting with tokens](/wallet-api/docs/smart-contract-deployments)
+- [Invoking smart contracts and querying chain state](/wallet-api/docs/smart-contract-interactions)
+
+## Wallet Configuration
+
+You can configure AgentKit to use a CDP wallet or a custom wallet provider.
+<Tabs>
+<TabItem value="CDP Wallet (default)">
+```typescript
+import {
+  AgentKit,
+  CdpWalletProvider,
+} from "@coinbase/agentkit";
+const provider = await CdpWalletProvider.configureWithWallet({
+  // Optional: Provide API key details. If not provided, it will attempt to configure from JSON.
+  apiKeyName: "YOUR_API_KEY_NAME", // process.env.API_KEY_NAME
+  apiKeyPrivateKey: "YOUR_API_KEY_PRIVATE_KEY", // process.env.API_KEY_PRIVATE_KEY
+  
+  // Optional: Provide network ID (defaults to base-sepolia if not specified)
+  networkId: "base-sepolia", // other options: "base-mainnet", "ethereum-mainnet", "arbitrum-mainnet", "polygon-mainnet".
+  
+  // Optional: Provide mnemonic phrase (alternatively can be set via MNEMONIC_PHRASE env var)
+  mnemonicPhrase: "your twelve word mnemonic phrase here",
+  
+  // Optional: Provide existing wallet data as JSON string
+  cdpWalletData: JSON.stringify(existingWalletData)
+});
+```
+</TabItem>
+
+<TabItem value="Viem Wallet">
+Viem is a TypeScript library for interacting with EVM-compatible blockchains. You can import a private key or mnemonic phrase into a Viem wallet client and use it to create a wallet provider with no API key required.
+```typescript
+    import {
+    AgentKit,
+    ViemWalletProvider,
+    walletActionProvider,
+    } from "@coinbase/agentkit";
+
+    // Viem-related imports for wallet management
+    import { createWalletClient, http } from "viem";
+    import { baseSepolia } from "viem/chains";
+    import { privateKeyToAccount } from "viem/accounts";
+
+    // Create a Viem wallet client - this example uses a hardcoded private key
+    // In production, use secure key management!
+    const account = privateKeyToAccount(
+      "0x4c0883a69102937d6231471b5dbb6208ffd70c02a813d7f2da1c54f2e3be9f38",
+    );
+
+    const client = createWalletClient({
+      account,
+      chain: baseSepolia,
+      transport: http(),
+    });
+
+    // Create a wallet provider that AgentKit can use
+    const walletProvider = new ViemWalletProvider(client);
+
+    // Initialize AgentKit with the wallet provider. Not including action providers defaults to the 'wallet' action provider.
+    const agentKit = await AgentKit.from({
+      walletProvider
+    });
+```
+</TabItem>
+<TabItem value="Add your own">
+Don't see your wallet provider in the list? AgentKit's modular architecture allows you to integrate other wallet providers that follow the [EIP-1193](https://eips.ethereum.org/EIPS/eip-1193) standard. We'd love to help you make a PR to add your wallet provider to AgentKit!
+</TabItem>
+</Tabs>
+
+### Using Custom Wallet Providers
+AgentKit's modular architecture allows you to integrate other wallet providers by implementing your own wallet provider that adheres to AgentKit's wallet interface. For more information on adding custom wallet providers, see [Adding Agent Capabilities](/agentkit/docs/add-agent-capabilities).
+
+## Default Operations
+
+By default, AgentKit supports the following basic wallet operations:
+
+- `get_wallet_details` - Get details about the Wallet, like the address
+- `transfer` - Transfer assets between addresses  
+- `get_native_balance` - Get the balance of an asset
+- `sign_message` - Sign a message
+
+You can add additional actions or action providers upon agent instantiation.
